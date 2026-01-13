@@ -1,8 +1,0 @@
-chromadb
-flask
-goose3
-ollama
-scrapy
-gunicorn
-python-dotenv
-requests
