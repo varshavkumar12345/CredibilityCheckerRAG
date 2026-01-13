@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credibility Checker - RAG</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        button {
+            grid-column: 1 / -1;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.05em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .score-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .score-value {
+            font-size: 4em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .score-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .score-card.low {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .score-card.medium {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: #333;
+        }
+
+        .score-card.high {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .result-section {
+            margin-bottom: 30px;
+        }
+
+        .result-section h3 {
+            color: #333;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-icon {
+            width: 24px;
+            height: 24px;
+            background: #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8em;
+        }
+
+        .reason-text {
+            background: #f5f7fa;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+            border-radius: 6px;
+            color: #333;
+            line-height: 1.6;
+            font-size: 1.05em;
+        }
+
+        .article-excerpt {
+            background: #f5f7fa;
+            padding: 20px;
+            border-radius: 6px;
+            color: #333;
+            line-height: 1.8;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.95em;
+        }
+
+        .snippets-text {
+            background: #f5f7fa;
+            padding: 20px;
+            border-radius: 6px;
+            color: #333;
+            line-height: 1.8;
+            font-size: 0.95em;
+        }
+
+        .snippets-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .documents-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .document-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: #f5f7fa;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #667eea;
+            font-weight: 500;
+            transition: background 0.3s;
+            word-break: break-all;
+        }
+
+        .document-link:hover {
+            background: #e8ecf5;
+        }
+
+        .link-icon {
+            flex-shrink: 0;
+        }
+
+        .error-message {
+            display: none;
+            background: #fee;
+            border-left: 4px solid #f5576c;
+            padding: 20px;
+            border-radius: 6px;
+            color: #c33;
+            margin-bottom: 30px;
+        }
+
+        .url-display {
+            color: #667eea;
+            word-break: break-all;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .score-value {
+                font-size: 3em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 Credibility Checker</h1>
+            <p class="subtitle">Verify news articles using AI-powered analysis</p>
+        </header>
+
+        <div class="input-section">
+            <form id="checkForm">
+                <div class="form-group">
+                    <label for="text">Article Text</label>
+                    <textarea 
+                        id="text" 
+                        name="text" 
+                        placeholder="Paste your article text here..." 
+                        rows="8"
+                        required
+                    ></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="topN">Related Articles</label>
+                        <input 
+                            type="number" 
+                            id="topN" 
+                            name="topN" 
+                            min="1" 
+                            max="10" 
+                            value="3"
+                        >
+                    </div>
+                    <div></div>
+                </div>
+
+                <button type="submit">Check Credibility</button>
+            </form>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 15px; color: #666;">Analyzing article...</p>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="results" id="results">
+            <div class="score-card" id="scoreCard">
+                <div class="score-value" id="scoreValue">-</div>
+                <div class="score-label" id="scoreLabel">Credibility Score</div>
+            </div>
+
+            <div class="result-section" id="snippetsSection" style="display: none;">
+                <h3>
+                    <span class="result-icon">📚</span>
+                    Referenced Articles
+                </h3>
+                <div class="snippets-list" id="snippetsList"></div>
+            </div>
+
+            <div class="result-section">
+                <h3>
+                    <span class="result-icon">💬</span>
+                    Analysis
+                </h3>
+                <div class="reason-text" id="reasonText"></div>
+            </div>
+
+            <div class="result-section">
+                <h3>
+                    <span class="result-icon">📄</span>
+                    Input Text
+                </h3>
+                <div class="article-excerpt" id="articleExcerpt"></div>
+            </div>
+
+            <div class="result-section" id="documentsSection" style="display: none;">
+                <h3>
+                    <span class="result-icon">🔗</span>
+                    Related Sources
+                </h3>
+                <div class="documents-list" id="documentsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('checkForm');
+        const textInput = document.getElementById('text');
+        const topNInput = document.getElementById('topN');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const errorMessage = document.getElementById('errorMessage');
+        const scoreCard = document.getElementById('scoreCard');
+        const scoreValue = document.getElementById('scoreValue');
+        const reasonText = document.getElementById('reasonText');
+        const articleExcerpt = document.getElementById('articleExcerpt');
+        const snippetsSection = document.getElementById('snippetsSection');
+        const snippetsList = document.getElementById('snippetsList');
+        const documentsSection = document.getElementById('documentsSection');
+        const documentsList = document.getElementById('documentsList');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await checkCredibility();
+        });
+
+        async function checkCredibility() {
+            const text = textInput.value.trim();
+            const topN = parseInt(topNInput.value) || 3;
+
+            if (!text) {
+                showError('Please enter article text');
+                return;
+            }
+
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            errorMessage.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/check', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text, top_n: topN }),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showError(data.message || 'An error occurred while checking credibility');
+                    loading.style.display = 'none';
+                    return;
+                }
+
+                displayResults(data);
+            } catch (error) {
+                showError('Failed to connect to server: ' + error.message);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function displayResults(data) {
+            const score = data.score ?? 0;
+            const reason = data.reason || 'Unable to determine credibility';
+            const article = data.article || '';
+            const documents = data.documents || [];
+
+            // Update score card
+            scoreValue.textContent = score;
+            scoreCard.className = 'score-card';
+            
+            if (score < 40) {
+                scoreCard.classList.add('low');
+            } else if (score < 70) {
+                scoreCard.classList.add('medium');
+            } else {
+                scoreCard.classList.add('high');
+            }
+
+            // Update Referenced Articles (only links)
+            if (documents && documents.length > 0) {
+                snippetsList.innerHTML = '';
+                documents.forEach((link, index) => {
+                    const linkElement = document.createElement('a');
+                    linkElement.href = link;
+                    linkElement.target = '_blank';
+                    linkElement.rel = 'noopener noreferrer';
+                    linkElement.className = 'document-link';
+                    
+                    // Format the display text
+                    const displayText = link.length > 80 ? link.substring(0, 80) + '...' : link;
+                    
+                    linkElement.innerHTML = `
+                        <span class="link-icon">🔗</span>
+                        <span>${displayText}</span>
+                    `;
+                    snippetsList.appendChild(linkElement);
+                });
+                snippetsSection.style.display = 'block';
+            } else {
+                snippetsSection.style.display = 'none';
+            }
+
+            // Update reason
+            reasonText.textContent = reason;
+
+            // Update article excerpt
+            articleExcerpt.textContent = article || 'No text provided';
+
+            results.style.display = 'block';
+            results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            results.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
