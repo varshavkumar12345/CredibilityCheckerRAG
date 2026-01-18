@@ -1,13 +1,17 @@
-scrapy==2.11.0
-sentence-transformers==2.2.2
-chromadb==0.4.15
-requests==2.31.0
+# Core Web Server (Required for GCP)
 flask==3.0.0
 flask-cors==4.0.0
-goose3==3.1.11
+gunicorn==21.2.0
+requests==2.31.0
 python-dotenv==1.0.0
+
+# AI & Vector DB (Optimized)
+chromadb==0.4.15
+sentence-transformers==2.2.2
+# The following usually come with sentence-transformers, but pinning explicitly can help stability
 transformers==4.35.2
-tensorflow==2.20.0
-tf-keras==2.20.1
-numpy==2.2.6
 huggingface-hub==0.20.1
+
+# Note: 'scrapy' and 'goose3' were removed to reduce image size.
+# If you need to run the web crawler on the cloud, uncomment the next line:
+# scrapy==2.11.0
