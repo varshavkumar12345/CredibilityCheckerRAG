@@ -78,28 +78,6 @@ python transformer/app.py
 
 The Flask app will start on `http://0.0.0.0:5000`
 
-### API Endpoint
-
-**POST** `/api/check`
-
-Request body:
-```json
-{
-  "text": "Article text or URL to check",
-  "top_n": 3
-}
-```
-
-Response:
-```json
-{
-  "article": "Checked article text",
-  "snippets": "Retrieved similar snippets",
-  "score": 75,
-  "reason": "Credibility assessment reason",
-  "documents": ["reference_url_1", "reference_url_2"]
-}
-```
 
 ## How It Works
 
