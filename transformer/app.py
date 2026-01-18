@@ -9,7 +9,7 @@ import requests
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
-from goose3 import Goose
+
 from sentence_transformers import SentenceTransformer
 
 load_dotenv()
@@ -30,7 +30,7 @@ embedding_model = SentenceTransformer(EMBEDDING_MODEL)
 
 # Set up ChromaDB with correct path
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CHROMADB_PATH = os.path.join(BASE_DIR, "data", "chromadb")
+CHROMADB_PATH = os.path.join(BASE_DIR, "data", "chroma_db")
 os.makedirs(CHROMADB_PATH, exist_ok=True)
 
 client = chromadb.PersistentClient(path=CHROMADB_PATH)
@@ -63,7 +63,7 @@ Reason: <brief reason>
 
 _RE_PARSE = re.compile(r"Credibility Score:\s*(\d+)\s*Reason:\s*(.*)", re.DOTALL)
 URL_PATTERN = re.compile(r"https?://[^\s\"')>\]]+")
-_GOOSE = Goose()
+
 
 
 @dataclass
